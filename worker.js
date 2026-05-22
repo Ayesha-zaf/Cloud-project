@@ -18,7 +18,7 @@ export default {
 
 export class MyDatabase {
   constructor(state, env) {
-    this.storage = state.storage;
+    this.state = state;
   }
 
   async fetch(request) {
@@ -26,13 +26,22 @@ export class MyDatabase {
 
     if (url.pathname === "/add") {
       const { name, email } = await request.json();
-      await this.storage.put(name, { email });
+
+      await this.state.storage.put(name, email);
+
       return new Response("Added successfully");
     }
 
     if (url.pathname === "/list") {
-      const entries = await this.storage.list();
-      return new Response(JSON.stringify([...entries.values()]), {
+      const list = await this.state.storage.list();
+
+      const results = [];
+
+      for (const [key, value] of list.entries()) {
+        results.push({ name: key, email: value });
+      }
+
+      return new Response(JSON.stringify(results), {
         headers: { "content-type": "application/json" }
       });
     }
@@ -40,3 +49,4 @@ export class MyDatabase {
     return new Response("Not found", { status: 404 });
   }
 }
+
